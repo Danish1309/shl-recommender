@@ -12,6 +12,7 @@ import re
 from typing import Optional
 
 import requests
+from groq import Groq
 
 from vector_store import retrieve, get_catalog
 
