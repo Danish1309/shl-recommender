@@ -138,37 +138,23 @@ def _build_search_query(messages: list[dict]) -> str:
 
 
 def _call_groq(messages: list[dict], system: str) -> Optional[str]:
-    """Call Groq API with the given messages."""
+    """Call Groq API using official SDK."""
     api_key = os.environ.get("GROQ_API_KEY", "")
     if not api_key:
         return None
 
-    payload = {
-        "model": GROQ_MODEL,
-        "messages": [{"role": "system", "content": system}] + messages,
-        "temperature": 0.1,
-        "max_tokens": 1500,
-        "response_format": {"type": "json_object"},
-    }
-
     try:
-        resp = requests.post(
-            GROQ_API_URL,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=25,
+        client = Groq(api_key=api_key)
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "system", "content": system}] + messages,
+            temperature=0.1,
+            max_tokens=1500,
+            response_format={"type": "json_object"},
         )
-        if resp.status_code == 200:
-            data = resp.json()
-            return data["choices"][0]["message"]["content"]
-        else:
-            logger.error(f"Groq API error {resp.status_code}: {resp.text[:200]}")
-            return None
+        return response.choices[0].message.content
     except Exception as e:
-        logger.error(f"Groq API call failed: {e}")
+        logger.error(f"Groq SDK call failed: {e}")
         return None
 
 
